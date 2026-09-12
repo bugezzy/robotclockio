@@ -99,6 +99,30 @@ return [
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
+        // The Supabase-hosted RobotClock database (organizations, teams,
+        // users, cards, punches). This app owns and migrates this schema;
+        // the 'default' sqlite connection remains separate for this app's
+        // own Fortify auth, sessions, cache, and jobs.
+        'supabase' => [
+            'driver' => 'pgsql',
+            'url' => env('SUPABASE_DB_URL'),
+            'host' => env('SUPABASE_DB_HOST', '127.0.0.1'),
+            'port' => env('SUPABASE_DB_PORT', '5432'),
+            'database' => env('SUPABASE_DB_DATABASE', 'postgres'),
+            'username' => env('SUPABASE_DB_USERNAME', 'postgres'),
+            'password' => env('SUPABASE_DB_PASSWORD', ''),
+            'charset' => env('SUPABASE_DB_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('SUPABASE_DB_SSLMODE', 'require'),
+            // The pooler runs in transaction mode by default, which doesn't
+            // support PHP's native server-side prepared statements.
+            'options' => [
+                PDO::ATTR_EMULATE_PREPARES => true,
+            ],
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),

@@ -8,18 +8,36 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * The `users` table here only ever runs during testing: the real one
+     * lives on the `supabase` connection (default connection now that it's
+     * `DB_CONNECTION=supabase`), created by
+     * database/migrations/*_create_supabase_users_table.php. This mirrors
+     * that table's shape so tests — which run against sqlite instead (see
+     * App\Models\User::getConnectionName()) — exercise the same columns.
+     * `password_reset_tokens` and `sessions` don't collide with anything in
+     * the backend's schema, so they're created for real too.
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
-        });
+        if (app()->environment('testing')) {
+            Schema::create('users', function (Blueprint $table) {
+                $table->uuid('id')->primary();
+                $table->string('full_name');
+                $table->string('email')->nullable()->unique();
+                $table->string('password_hash')->nullable();
+                $table->uuid('team_id')->nullable();
+                $table->string('role')->default('member');
+                $table->boolean('active')->default(true);
+                $table->uuid('organization_id')->nullable();
+                $table->timestamp('email_verified_at')->nullable();
+                $table->text('two_factor_secret')->nullable();
+                $table->text('two_factor_recovery_codes')->nullable();
+                $table->timestamp('two_factor_confirmed_at')->nullable();
+                $table->rememberToken();
+                $table->timestamps();
+            });
+        }
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
@@ -29,7 +47,7 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->uuid('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
@@ -42,7 +60,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        if (app()->environment('testing')) {
+            Schema::dropIfExists('users');
+        }
+
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }

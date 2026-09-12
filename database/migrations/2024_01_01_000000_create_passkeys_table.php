@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('passkeys', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            // No DB-level foreign key: the live app's users live on a
+            // separate connection (see App\Models\User::getConnectionName()).
+            $table->uuid('user_id');
             $table->string('name');
             $table->string('credential_id')->unique();
             $table->json('credential');
