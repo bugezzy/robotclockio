@@ -17,13 +17,15 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // Owner, not member: an owner is the only role that doesn't require
-        // an organization_id (see the users_org_unless_owner check on the
+        // System, not owner: system is the only role that doesn't require
+        // an organization_id (see the users_org_unless_system check on the
         // real users table), so this stays a simple, dependency-free login
-        // for local admin panel access.
-        User::factory()->owner()->create([
+        // with full admin panel access.
+        User::factory()->system()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        $this->call(DemoDataSeeder::class);
     }
 }

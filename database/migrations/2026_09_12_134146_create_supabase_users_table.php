@@ -33,6 +33,7 @@ return new class extends Migration
             $table->string('password_hash')->nullable();
             $table->foreignUuid('team_id')->nullable()->constrained('teams')->nullOnDelete();
             $table->string('role')->default('member');
+            $table->foreign('role')->references('name')->on('roles');
             $table->boolean('active')->default(true);
             $table->timestamps();
             $table->foreignUuid('organization_id')->nullable()->constrained('organizations')->restrictOnDelete();
@@ -59,18 +60,13 @@ return new class extends Migration
 
         DB::statement(<<<'SQL'
             alter table users
-                add constraint users_role_check check (role in ('owner', 'admin', 'member'))
-            SQL);
-
-        DB::statement(<<<'SQL'
-            alter table users
                 add constraint users_signin_has_email check (role = 'member' or email is not null)
             SQL);
 
         DB::statement(<<<'SQL'
             alter table users
-                add constraint users_org_unless_owner
-                check (role = 'owner' or organization_id is not null)
+                add constraint users_org_unless_system
+                check (role = 'system' or organization_id is not null)
             SQL);
 
         DB::statement(<<<'SQL'

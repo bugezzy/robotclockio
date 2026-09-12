@@ -37,13 +37,20 @@ return new class extends Migration
                 v_token uuid;
                 v_org   text;
             begin
+                -- This server's pgcrypto doesn't recognise the $2y$ prefix
+                -- PHP's bcrypt hasher writes (App\Models\User::password()) —
+                -- it silently falls back to DES and never matches. $2a/$2b/
+                -- $2x/$2y are the same bcrypt algorithm under the hood, so
+                -- normalizing the prefix before hashing/comparing verifies
+                -- correctly no matter which side wrote the hash.
                 select u.* into v_user
                 from public.users u
                 where u.email = lower(trim(p_email))
                   and u.active
-                  and u.role in ('owner', 'admin')
+                  and u.role in ('admin', 'owner', 'system')
                   and u.password_hash is not null
-                  and u.password_hash = extensions.crypt(p_password, u.password_hash);
+                  and regexp_replace(u.password_hash, '^\$2[abxy]\$', '$2a$')
+                      = extensions.crypt(p_password, regexp_replace(u.password_hash, '^\$2[abxy]\$', '$2a$'));
 
                 if v_user.id is null then
                     return;
@@ -64,8 +71,8 @@ return new class extends Migration
                 insert into private.sessions (user_id) values (v_user.id)
                 returning private.sessions.token into v_token;
 
-                return query select v_token, v_user.id, v_user.full_name, v_user.email, v_user.role,
-                                    v_user.organization_id, v_org;
+                return query select v_token, v_user.id, v_user.full_name::text, v_user.email::text,
+                                    v_user.role::text, v_user.organization_id, v_org;
             end;
             $fn$;
             SQL);
@@ -95,7 +102,7 @@ return new class extends Migration
                 v_org := private.kiosk_org(p_kiosk_key);
 
                 return query
-                select c.card_uid, u.full_name, t.name
+                select c.card_uid, u.full_name::text, t.name::text
                 from public.cards c
                 join public.users u on u.id = c.user_id
                 left join public.teams t on t.id = u.team_id

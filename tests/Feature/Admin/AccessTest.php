@@ -13,7 +13,7 @@ class AccessTest extends TestCase
     public function test_guests_are_redirected_to_the_login_page(): void
     {
         $this->get(route('admin.dashboard'))->assertRedirect(route('login'));
-        $this->get(route('admin.customers.index'))->assertRedirect(route('login'));
+        $this->get(route('admin.organizations.index'))->assertRedirect(route('login'));
     }
 
     public function test_non_admin_users_cannot_access_the_admin_dashboard(): void
@@ -25,12 +25,12 @@ class AccessTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_non_admin_users_cannot_access_customers(): void
+    public function test_non_admin_users_cannot_access_organizations(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get(route('admin.customers.index'))
+            ->get(route('admin.organizations.index'))
             ->assertForbidden();
     }
 }

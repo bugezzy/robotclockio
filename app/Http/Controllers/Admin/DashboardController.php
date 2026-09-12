@@ -22,7 +22,7 @@ class DashboardController extends Controller
             'stats' => [
                 'organizations' => Organization::count(),
                 'activeOrganizations' => Organization::where('active', true)->count(),
-                'employees' => User::count(),
+                'users' => User::count(),
                 'activeCards' => Card::whereNull('revoked_at')->count(),
                 'punchesToday' => Punch::whereDate('punched_at', Carbon::today())->count(),
             ],

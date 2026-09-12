@@ -82,7 +82,7 @@ return new class extends Migration
                 where s.token = p_token
                   and s.expires_at > now()
                   and u.active
-                  and u.role in ('owner', 'admin');
+                  and u.role in ('admin', 'owner', 'system');
 
                 if v_user is null then
                     raise exception 'session is invalid or has expired' using errcode = '28000';
@@ -107,14 +107,18 @@ return new class extends Migration
                     raise exception 'not signed in' using errcode = '28000';
                 end if;
 
+                -- users.role is varchar; the declared return type above is
+                -- text, and RETURN QUERY requires an exact match, not just a
+                -- castable one — see 2026_09_12_210001 for how this class of
+                -- bug surfaced in public.login().
                 return query
-                select u.id, u.role, u.organization_id
+                select u.id, u.role::text, u.organization_id
                 from private.sessions s
                 join public.users u on u.id = s.user_id
                 where s.token = p_token
                   and s.expires_at > now()
                   and u.active
-                  and u.role in ('owner', 'admin');
+                  and u.role in ('admin', 'owner', 'system');
 
                 if not found then
                     raise exception 'session is invalid or has expired' using errcode = '28000';
@@ -123,8 +127,9 @@ return new class extends Migration
             $fn$;
             SQL);
 
-        // Which organization a write should land in: an admin's own, or the
-        // one an owner names. The tenant-isolation enforcement point.
+        // Which organization a write should land in: an owner's own, or the
+        // one a system-tier caller names. The tenant-isolation enforcement
+        // point.
         DB::unprepared(<<<'SQL'
             create or replace function private.target_org(p_role text, p_actor_org uuid, p_requested uuid)
             returns uuid
@@ -133,9 +138,9 @@ return new class extends Migration
             set search_path = ''
             as $fn$
             begin
-                if p_role = 'owner' then
+                if p_role = 'system' then
                     if coalesce(p_requested, p_actor_org) is null then
-                        raise exception 'which organization? an owner must name one';
+                        raise exception 'which organization? a system user must name one';
                     end if;
                     return coalesce(p_requested, p_actor_org);
                 end if;
@@ -180,7 +185,7 @@ return new class extends Migration
         // Trigger function: a person's team must be in their own
         // organization. A trigger rather than a composite FK because ON
         // DELETE SET NULL on a composite FK would null organization_id too
-        // and violate users_org_unless_owner.
+        // and violate users_org_unless_system.
         DB::unprepared(<<<'SQL'
             create or replace function private.user_team_in_same_org()
             returns trigger

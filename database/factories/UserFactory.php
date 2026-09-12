@@ -63,7 +63,7 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the user administers their organization.
+     * Indicate that the user is a team admin (adds/removes cards).
      */
     public function admin(): static
     {
@@ -73,12 +73,25 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the user owns their organization.
+     * Indicate that the user owns their organization (creates teams, edits
+     * the organization).
      */
     public function owner(): static
     {
         return $this->state(fn (array $attributes) => [
             'role' => 'owner',
+        ]);
+    }
+
+    /**
+     * Indicate that the user has system-wide access (creates and licenses
+     * organizations).
+     */
+    public function system(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'system',
+            'organization_id' => null,
         ]);
     }
 }

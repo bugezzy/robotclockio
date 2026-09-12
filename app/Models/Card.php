@@ -19,7 +19,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $issued_at
  * @property Carbon|null $revoked_at
  */
-#[Fillable(['card_uid', 'user_id', 'label'])]
+#[Fillable(['card_uid', 'user_id', 'label', 'issued_at', 'revoked_at'])]
 class Card extends Model
 {
     /** @use HasFactory<CardFactory> */

@@ -14,11 +14,17 @@ return new class extends Migration
     /**
      * Run the migrations.
      *
-     * The admin/owner management surface. Every function resolves the
-     * caller through private.session_actor(p_token) and filters on that
-     * caller's organization (an owner sees across all of them) — that
-     * filter is the security boundary, written out in each function rather
-     * than hidden behind something that could be left off.
+     * The admin/owner/system management surface. Every function resolves
+     * the caller through private.session_actor(p_token) and filters on that
+     * caller's organization (a system-tier caller sees across all of them)
+     * — that filter is the security boundary, written out in each function
+     * rather than hidden behind something that could be left off.
+     *
+     * Role tiers, each a superset of the one before: admin (reads their
+     * org's data, issues/revokes cards) < owner (also manages users/teams,
+     * edits their own organization) < system (all of the above, across
+     * every organization, plus creating/licensing organizations — see
+     * create_owner_functions).
      */
     public function up(): void
     {
@@ -43,16 +49,16 @@ return new class extends Migration
                 select a.role, a.organization_id into v_role, v_org from private.session_actor(p_token) a;
 
                 return query
-                select u.id, u.full_name, u.email, u.role, u.active,
-                       u.team_id, t.name,
+                select u.id, u.full_name::text, u.email::text, u.role::text, u.active,
+                       u.team_id, t.name::text,
                        (select c.card_uid from public.cards c
                          where c.user_id = u.id and c.revoked_at is null limit 1),
                        u.password_hash is not null,
-                       u.organization_id, o.name
+                       u.organization_id, o.name::text
                 from public.users u
                 left join public.teams t on t.id = u.team_id
                 left join public.organizations o on o.id = u.organization_id
-                where v_role = 'owner' or u.organization_id = v_org
+                where v_role = 'system' or u.organization_id = v_org
                 order by o.name nulls first, u.full_name;
             end;
             $fn$;
@@ -74,10 +80,15 @@ return new class extends Migration
                 v_id     uuid;
             begin
                 select a.role, a.organization_id into v_role, v_org from private.session_actor(p_token) a;
+
+                if v_role not in ('owner', 'system') then
+                    raise exception 'not permitted';
+                end if;
+
                 v_target := private.target_org(v_role, v_org, p_organization_id);
 
-                if p_role = 'owner' and v_role <> 'owner' then
-                    raise exception 'only an owner can appoint an owner';
+                if p_role = 'system' and v_role <> 'system' then
+                    raise exception 'only a system user can appoint a system user';
                 end if;
 
                 if p_id is null then
@@ -94,7 +105,7 @@ return new class extends Migration
                            active          = coalesce(p_active, true),
                            organization_id = v_target
                      where users.id = p_id
-                       and (v_role = 'owner' or users.organization_id = v_org)
+                       and (v_role = 'system' or users.organization_id = v_org)
                     returning users.id into v_id;
 
                     if v_id is null then
@@ -120,6 +131,10 @@ return new class extends Migration
             begin
                 select a.role, a.organization_id into v_role, v_org from private.session_actor(p_token) a;
 
+                if v_role not in ('owner', 'system') then
+                    raise exception 'not permitted';
+                end if;
+
                 if length(coalesce(p_password, '')) < 8 then
                     raise exception 'password must be at least 8 characters';
                 end if;
@@ -127,7 +142,7 @@ return new class extends Migration
                 update public.users u
                    set password_hash = extensions.crypt(p_password, extensions.gen_salt('bf'))
                  where u.id = p_user_id
-                   and (v_role = 'owner' or u.organization_id = v_org);
+                   and (v_role = 'system' or u.organization_id = v_org);
 
                 if not found then
                     raise exception 'no such user';
@@ -149,9 +164,13 @@ return new class extends Migration
             begin
                 select a.role, a.organization_id into v_role, v_org from private.session_actor(p_token) a;
 
+                if v_role not in ('owner', 'system') then
+                    raise exception 'not permitted';
+                end if;
+
                 delete from public.users u
                  where u.id = p_user_id
-                   and (v_role = 'owner' or u.organization_id = v_org);
+                   and (v_role = 'system' or u.organization_id = v_org);
 
                 if not found then
                     raise exception 'no such user';
@@ -176,12 +195,12 @@ return new class extends Migration
                 select a.role, a.organization_id into v_role, v_org from private.session_actor(p_token) a;
 
                 return query
-                select t.id, t.name, t.description, t.active,
+                select t.id, t.name::text, t.description, t.active,
                        (select count(*) from public.users u where u.team_id = t.id),
-                       t.organization_id, o.name
+                       t.organization_id, o.name::text
                 from public.teams t
                 join public.organizations o on o.id = t.organization_id
-                where v_role = 'owner' or t.organization_id = v_org
+                where v_role = 'system' or t.organization_id = v_org
                 order by o.name, t.name;
             end;
             $fn$;
@@ -203,6 +222,11 @@ return new class extends Migration
                 v_id     uuid;
             begin
                 select a.role, a.organization_id into v_role, v_org from private.session_actor(p_token) a;
+
+                if v_role not in ('owner', 'system') then
+                    raise exception 'not permitted';
+                end if;
+
                 v_target := private.target_org(v_role, v_org, p_organization_id);
 
                 if p_id is null then
@@ -217,7 +241,7 @@ return new class extends Migration
                            active          = coalesce(p_active, true),
                            organization_id = v_target
                      where teams.id = p_id
-                       and (v_role = 'owner' or teams.organization_id = v_org)
+                       and (v_role = 'system' or teams.organization_id = v_org)
                     returning teams.id into v_id;
 
                     if v_id is null then
@@ -243,9 +267,13 @@ return new class extends Migration
             begin
                 select a.role, a.organization_id into v_role, v_org from private.session_actor(p_token) a;
 
+                if v_role not in ('owner', 'system') then
+                    raise exception 'not permitted';
+                end if;
+
                 delete from public.teams t
                  where t.id = p_id
-                   and (v_role = 'owner' or t.organization_id = v_org);
+                   and (v_role = 'system' or t.organization_id = v_org);
 
                 if not found then
                     raise exception 'no such team';
@@ -270,15 +298,17 @@ return new class extends Migration
                 select a.role, a.organization_id into v_role, v_org from private.session_actor(p_token) a;
 
                 return query
-                select c.card_uid, c.user_id, u.full_name, c.label, c.issued_at, c.revoked_at
+                select c.card_uid, c.user_id, u.full_name::text, c.label, c.issued_at, c.revoked_at
                 from public.cards c
                 join public.users u on u.id = c.user_id
-                where v_role = 'owner' or u.organization_id = v_org
+                where v_role = 'system' or u.organization_id = v_org
                 order by c.revoked_at nulls first, u.full_name, c.issued_at desc;
             end;
             $fn$;
             SQL);
 
+        // Issuing and revoking cards is admin's core job — no rank gate
+        // beyond the admin+ that session_actor already requires.
         DB::unprepared(<<<'SQL'
             create or replace function public.admin_issue_card(p_token uuid, p_card_uid text,
                                                        p_user_id uuid, p_label text)
@@ -301,7 +331,7 @@ return new class extends Migration
 
                 if not exists (
                     select 1 from public.users u
-                    where u.id = p_user_id and (v_role = 'owner' or u.organization_id = v_org)
+                    where u.id = p_user_id and (v_role = 'system' or u.organization_id = v_org)
                 ) then
                     raise exception 'no such user';
                 end if;
@@ -353,7 +383,7 @@ return new class extends Migration
                    and c.revoked_at is null
                    and exists (
                        select 1 from public.users u
-                       where u.id = c.user_id and (v_role = 'owner' or u.organization_id = v_org)
+                       where u.id = c.user_id and (v_role = 'system' or u.organization_id = v_org)
                    );
 
                 if not found then
@@ -377,6 +407,11 @@ return new class extends Migration
                 v_key    uuid;
             begin
                 select a.role, a.organization_id into v_role, v_org from private.session_actor(p_token) a;
+
+                if v_role not in ('owner', 'system') then
+                    raise exception 'not permitted';
+                end if;
+
                 v_target := private.target_org(v_role, v_org, p_organization_id);
 
                 update public.organizations o
@@ -408,11 +443,51 @@ return new class extends Migration
                 select a.organization_id into v_org from private.session_actor(p_token) a;
 
                 return query
-                select o.id, o.name, o.description, o.active, o.kiosk_key,
+                select o.id, o.name::text, o.description, o.active, o.kiosk_key,
                        (select count(*) from public.teams t where t.organization_id = o.id),
                        (select count(*) from public.users u where u.organization_id = o.id)
                 from public.organizations o
                 where o.id = v_org;
+            end;
+            $fn$;
+            SQL);
+
+        // New: an owner editing their own organization's name/description.
+        // Distinct from owner_save_organization (system-only, any org by
+        // id, and the only way to create a new organization at all).
+        DB::unprepared(<<<'SQL'
+            create or replace function public.admin_save_organization(p_token uuid, p_name text, p_description text)
+            returns uuid
+            language plpgsql
+            security definer
+            set search_path = ''
+            as $fn$
+            declare
+                v_role text;
+                v_org  uuid;
+                v_id   uuid;
+            begin
+                select a.role, a.organization_id into v_role, v_org from private.session_actor(p_token) a;
+
+                if v_role not in ('owner', 'system') then
+                    raise exception 'not permitted';
+                end if;
+
+                if v_org is null then
+                    raise exception 'no organization is associated with your session';
+                end if;
+
+                update public.organizations
+                   set name        = trim(p_name),
+                       description = nullif(trim(coalesce(p_description, '')), '')
+                 where organizations.id = v_org
+                returning organizations.id into v_id;
+
+                if v_id is null then
+                    raise exception 'no such organization';
+                end if;
+
+                return v_id;
             end;
             $fn$;
             SQL);

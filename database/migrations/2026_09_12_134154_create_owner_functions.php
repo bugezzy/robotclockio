@@ -14,7 +14,9 @@ return new class extends Migration
     /**
      * Run the migrations.
      *
-     * Cross-organization functions reachable only by an owner.
+     * Cross-organization functions reachable only by a system-tier caller.
+     * Function names stay owner_* for API compatibility with existing
+     * callers — only the internal role check changed.
      */
     public function up(): void
     {
@@ -35,12 +37,12 @@ return new class extends Migration
                 v_role text;
             begin
                 select a.role into v_role from private.session_actor(p_token) a;
-                if v_role <> 'owner' then
-                    raise exception 'only an owner can list organizations';
+                if v_role <> 'system' then
+                    raise exception 'only a system user can list organizations';
                 end if;
 
                 return query
-                select o.id, o.name, o.description, o.active, o.kiosk_key,
+                select o.id, o.name::text, o.description, o.active, o.kiosk_key,
                        (select count(*) from public.teams t where t.organization_id = o.id),
                        (select count(*) from public.users u where u.organization_id = o.id)
                 from public.organizations o
@@ -62,8 +64,8 @@ return new class extends Migration
                 v_id   uuid;
             begin
                 select a.role into v_role from private.session_actor(p_token) a;
-                if v_role <> 'owner' then
-                    raise exception 'only an owner can create or rename organizations';
+                if v_role <> 'system' then
+                    raise exception 'only a system user can create or rename organizations';
                 end if;
 
                 if p_id is null then
@@ -101,8 +103,8 @@ return new class extends Migration
                 v_n    bigint;
             begin
                 select a.role into v_role from private.session_actor(p_token) a;
-                if v_role <> 'owner' then
-                    raise exception 'only an owner can delete an organization';
+                if v_role <> 'system' then
+                    raise exception 'only a system user can delete an organization';
                 end if;
 
                 select count(*) into v_n from public.users u where u.organization_id = p_id;

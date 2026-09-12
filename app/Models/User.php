@@ -45,7 +45,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password', 'team_id', 'organization_id'])]
+#[Fillable(['name', 'email', 'password', 'role', 'active', 'team_id', 'organization_id'])]
 #[Hidden(['password_hash', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -104,14 +104,31 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
-     * There's no is_admin column — admin panel access is granted to
-     * organization owners and admins.
+     * There's no is_admin column — admin panel access is granted to every
+     * role above plain member (admin, owner, system).
      */
     protected function isAdmin(): Attribute
     {
         return Attribute::make(
-            get: fn () => in_array($this->role, ['owner', 'admin'], true),
+            get: fn () => in_array($this->role, ['admin', 'owner', 'system'], true),
         );
+    }
+
+    /**
+     * System-tier: full access, across every organization.
+     */
+    public function isSystem(): bool
+    {
+        return $this->role === 'system';
+    }
+
+    /**
+     * Owner or system: manages users/teams and edits the organization
+     * (system does so across every organization; owner only their own).
+     */
+    public function isOwnerOrAbove(): bool
+    {
+        return in_array($this->role, ['owner', 'system'], true);
     }
 
     /**

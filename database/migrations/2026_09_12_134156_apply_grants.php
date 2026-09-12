@@ -16,13 +16,14 @@ return new class extends Migration
      *
      * Re-applies the RobotClock backend's own intended access control:
      * revoke everything from anon/authenticated, then hand back exactly the
-     * functions the kiosk and admin dashboard need. Scoped to the backend's
-     * own tables/schema only — this app's own tables (cache, jobs, sessions,
-     * passkeys, etc., which also live on this connection) are untouched.
+     * functions the kiosk and admin dashboard need.
      *
      * Supabase's default privileges grant ALL on every new table/view/
      * function in `public` to anon and authenticated, so these revokes are
-     * not belt-and-braces — without them anon holds the place.
+     * not belt-and-braces — without them anon holds the place. That default
+     * lands on every table Laravel creates on this connection, including
+     * its own framework tables (cache, jobs, sessions, passkeys, etc.), so
+     * those are revoked here too rather than left exposed.
      */
     public function up(): void
     {
@@ -31,12 +32,22 @@ return new class extends Migration
         }
 
         DB::statement(<<<'SQL'
-            revoke all on public.organizations, public.teams, public.users, public.cards, public.punches
+            revoke all on public.organizations, public.teams, public.users, public.cards, public.punches,
+                public.roles
                 from anon, authenticated
             SQL);
 
         DB::statement(<<<'SQL'
             revoke all on public.shift_sessions, public.daily_hours from anon, authenticated
+            SQL);
+
+        DB::statement(<<<'SQL'
+            revoke all on
+                public.sessions, public.password_reset_tokens,
+                public.cache, public.cache_locks,
+                public.jobs, public.job_batches, public.failed_jobs,
+                public.passkeys, public.migrations
+                from anon, authenticated
             SQL);
 
         DB::statement('revoke all on all functions in schema public from public, anon, authenticated');
@@ -70,6 +81,7 @@ return new class extends Migration
         DB::statement('grant execute on function public.admin_team_hours(uuid, date, date) to anon');
         DB::statement('grant execute on function public.admin_punches(uuid, date, date, int) to anon');
         DB::statement('grant execute on function public.admin_organization(uuid) to anon');
+        DB::statement('grant execute on function public.admin_save_organization(uuid, text, text) to anon');
         DB::statement('grant execute on function public.admin_rotate_kiosk_key(uuid, uuid) to anon');
         DB::statement('grant execute on function public.owner_organizations(uuid) to anon');
         DB::statement(<<<'SQL'

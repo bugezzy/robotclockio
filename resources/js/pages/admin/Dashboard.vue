@@ -8,7 +8,7 @@ import admin from '@/routes/admin';
 type Stats = {
     organizations: number;
     activeOrganizations: number;
-    employees: number;
+    users: number;
     activeCards: number;
     punchesToday: number;
 };
@@ -51,7 +51,7 @@ function formatDateTime(value: string): string {
     <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto p-4">
         <Heading
             title="Dashboard"
-            description="Overview of RobotClock customer activity."
+            description="Overview of RobotClock organization activity."
         />
 
         <div class="grid auto-rows-min gap-4 md:grid-cols-3">
@@ -60,7 +60,7 @@ function formatDateTime(value: string): string {
                     <CardTitle
                         class="text-muted-foreground text-sm font-medium"
                     >
-                        Customers
+                        Organizations
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -78,12 +78,12 @@ function formatDateTime(value: string): string {
                     <CardTitle
                         class="text-muted-foreground text-sm font-medium"
                     >
-                        Employees
+                        Users
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p class="text-2xl font-semibold">
-                        {{ stats.employees }}
+                        {{ stats.users }}
                     </p>
                     <p class="text-muted-foreground text-xs">
                         {{ stats.activeCards }} active cards issued
@@ -143,12 +143,12 @@ function formatDateTime(value: string): string {
                         />
                         <div>
                             <p class="text-sm font-medium">
-                                {{ punch.employee_name ?? 'Unknown employee' }}
+                                {{ punch.employee_name ?? 'Unknown user' }}
                             </p>
                             <p class="text-muted-foreground text-xs">
                                 {{
                                     punch.organization_name ??
-                                    'Unknown customer'
+                                    'Unknown organization'
                                 }}
                             </p>
                         </div>
