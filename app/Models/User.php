@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -47,7 +47,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  */
 #[Fillable(['name', 'email', 'password', 'role', 'active', 'team_id', 'organization_id'])]
 #[Hidden(['password_hash', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements PasskeyUser
+class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasUuids, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -129,6 +129,16 @@ class User extends Authenticatable implements PasskeyUser
     public function isOwnerOrAbove(): bool
     {
         return in_array($this->role, ['owner', 'system'], true);
+    }
+
+    /**
+     * Owns their organization's account — the only role that can buy from
+     * the store. Not `isOwnerOrAbove()`: system has no organization_id to
+     * ship an order to.
+     */
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
     }
 
     /**

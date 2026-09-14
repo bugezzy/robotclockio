@@ -2,31 +2,36 @@
 
 namespace App\Models;
 
-use Database\Factories\TeamFactory;
+use Database\Factories\ReleaseFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
+ * A single build of the kiosk desktop app for one platform. History is
+ * append-only — a new upload for a platform creates a new row and moves
+ * `is_latest` onto it, rather than overwriting the previous release.
+ *
  * @property string $id
- * @property string $name
- * @property string|null $description
- * @property bool $active
- * @property string $organization_id
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property string $platform
+ * @property string $version
+ * @property string $url
+ * @property bool $is_latest
+ * @property string|null $created_by
+ * @property Carbon $created_at
  */
-#[Fillable(['name', 'description', 'active', 'organization_id'])]
-class Team extends Model
+#[Fillable(['platform', 'version', 'url', 'is_latest', 'created_by'])]
+class Release extends Model
 {
-    /** @use HasFactory<TeamFactory> */
+    /** @use HasFactory<ReleaseFactory> */
     use HasFactory, HasUuids;
 
     protected $connection = 'supabase';
+
+    public $timestamps = false;
 
     /**
      * Tests use the local sqlite connection instead, so they stay fast,
@@ -43,23 +48,16 @@ class Team extends Model
     protected function casts(): array
     {
         return [
-            'active' => 'boolean',
+            'is_latest' => 'boolean',
+            'created_at' => 'datetime',
         ];
     }
 
     /**
-     * @return BelongsTo<Organization, $this>
+     * @return BelongsTo<User, $this>
      */
-    public function organization(): BelongsTo
+    public function uploadedBy(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
-    }
-
-    /**
-     * @return HasMany<User, $this>
-     */
-    public function employees(): HasMany
-    {
-        return $this->hasMany(User::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

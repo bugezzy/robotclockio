@@ -1,30 +1,30 @@
 <script setup lang="ts">
-import { CalendarClock, Bell, Users, BarChart3 } from '@lucide/vue';
+import { CreditCard, Clock, UsersRound, Package } from '@lucide/vue';
 
 const features = [
     {
-        icon: CalendarClock,
-        title: 'Automated scheduling',
+        icon: CreditCard,
+        title: 'Tap-and-go kiosk',
         description:
-            'Build shift schedules in minutes with rules-based automation that accounts for availability, overtime, and coverage needs.',
+            'Members badge in and out with an RFID card at a kiosk — no app to open, no PIN to remember, no fumbling.',
     },
     {
-        icon: Bell,
-        title: 'Real-time coverage alerts',
+        icon: Clock,
+        title: 'Accurate, per-person hours',
         description:
-            'Get notified the moment a shift is at risk of going uncovered, with one-tap options to fill the gap.',
+            'Every tap is tied to one member’s RFID tag, so hours are tracked individually, not just totaled for the team.',
     },
     {
-        icon: Users,
-        title: 'Team self-service',
+        icon: UsersRound,
+        title: 'Organized by team',
         description:
-            'Let employees swap shifts, request time off, and clock in from anywhere, with manager approval built in.',
+            'Group members into teams within your club, and see attendance broken down by team from the admin dashboard.',
     },
     {
-        icon: BarChart3,
-        title: 'Labor insights',
+        icon: Package,
+        title: 'RFID hardware, delivered',
         description:
-            'See labor costs, attendance trends, and overtime risk at a glance with reporting built for operators.',
+            'Order standard or premium cards and readers right from the admin store whenever your club needs more.',
     },
 ];
 </script>
@@ -34,11 +34,12 @@ const features = [
         <div class="mx-auto max-w-6xl px-6 py-20">
             <div class="mx-auto max-w-2xl text-center">
                 <h2 class="text-3xl font-semibold tracking-tight md:text-4xl">
-                    Everything you need to run the schedule
+                    Everything you need to track hours
                 </h2>
                 <p class="mt-4 text-muted-foreground">
-                    RobotClock handles the busywork of scheduling so your
-                    managers can focus on the people, not the spreadsheet.
+                    RobotClock handles the busywork of attendance so your
+                    club or team can focus on the people, not the
+                    spreadsheet.
                 </p>
             </div>
 

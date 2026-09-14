@@ -9,8 +9,8 @@ const tiers = [
         name: 'Starter',
         price: '$0',
         period: 'forever',
-        description: 'For small teams getting started with scheduling.',
-        features: ['Up to 5 team members', 'Basic scheduling', 'Email support'],
+        description: 'For small clubs and teams getting started with RFID time tracking.',
+        features: ['Up to 5 team members', 'RFID kiosk badge in/out', 'Email support'],
         cta: 'Start for free',
         featured: false,
     },
@@ -18,18 +18,18 @@ const tiers = [
         name: 'Team',
         price: '$29',
         period: 'per month',
-        description: 'For growing teams that need automation and alerts.',
+        description: 'For growing clubs and teams that need more hardware and history.',
         features: [
             'Unlimited team members',
-            'Automated scheduling',
-            'Real-time coverage alerts',
+            'Per-member hour tracking',
+            'RFID card & reader ordering',
             'Priority support',
         ],
         cta: 'Start free trial',
         featured: true,
     },
     {
-        name: 'Enterprise',
+        name: 'Organization',
         price: 'Contact us',
         period: '',
         description: 'For multi-location operations with custom needs.',
@@ -52,7 +52,8 @@ const tiers = [
                 Simple, transparent pricing
             </h2>
             <p class="mt-4 text-muted-foreground">
-                Start free. Upgrade when your team is ready for automation.
+                Start free. Upgrade when your club or team needs more
+                hardware and history.
             </p>
         </div>
 

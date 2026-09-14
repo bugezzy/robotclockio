@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
-import { Building2, Pencil, Plus } from '@lucide/vue';
+import { Form, Head, useHttp } from '@inertiajs/vue3';
+import { Building2, Check, Copy, KeyRound, Pencil, Plus, ShieldOff } from '@lucide/vue';
 import { ref } from 'vue';
+import { toast } from 'vue-sonner';
 import OrganizationController from '@/actions/App/Http/Controllers/Admin/OrganizationController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -34,6 +35,7 @@ type OrganizationRow = {
 const props = defineProps<{
     organizations: OrganizationRow[];
     canCreate: boolean;
+    canManageLicenses: boolean;
 }>();
 
 defineOptions({
@@ -59,6 +61,107 @@ function formatDate(value: string): string {
 
 const editing = ref<OrganizationRow | null>(null);
 const createOpen = ref(false);
+
+type LicenseIssuance = {
+    issued_at: string;
+    issued_by: string | null;
+};
+
+const licensing = ref<OrganizationRow | null>(null);
+const licenseText = ref<string | null>(null);
+const licenseHistory = ref<LicenseIssuance[]>([]);
+const licenseError = ref<string | null>(null);
+const licenseCopied = ref(false);
+const issuingLicense = ref(false);
+const confirmingRevoke = ref(false);
+const revokingLicense = ref(false);
+
+const licenseHttp = useHttp();
+
+function formatDateTime(value: string): string {
+    return new Date(value).toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    });
+}
+
+async function openLicense(organization: OrganizationRow) {
+    licensing.value = organization;
+    licenseText.value = null;
+    licenseHistory.value = [];
+    licenseError.value = null;
+    licenseCopied.value = false;
+    confirmingRevoke.value = false;
+
+    try {
+        const { history } = (await licenseHttp.submit(
+            OrganizationController.licenseHistory(organization.id),
+        )) as { history: LicenseIssuance[] };
+
+        licenseHistory.value = history;
+    } catch {
+        licenseError.value = 'Could not load license history for this organization.';
+    }
+}
+
+async function issueLicense() {
+    if (!licensing.value) {
+        return;
+    }
+
+    issuingLicense.value = true;
+    licenseError.value = null;
+    licenseCopied.value = false;
+
+    try {
+        const { license, history } = (await licenseHttp.submit(
+            OrganizationController.issueLicense(licensing.value.id),
+        )) as { license: string; history: LicenseIssuance[] };
+
+        licenseText.value = license;
+        licenseHistory.value = history;
+    } catch {
+        licenseError.value = 'Could not generate a license for this organization.';
+    } finally {
+        issuingLicense.value = false;
+    }
+}
+
+async function revokeLicense() {
+    if (!licensing.value) {
+        return;
+    }
+
+    revokingLicense.value = true;
+    licenseError.value = null;
+
+    try {
+        const { history } = (await licenseHttp.submit(
+            OrganizationController.revokeLicense(licensing.value.id),
+        )) as { history: LicenseIssuance[] };
+
+        licenseHistory.value = history;
+        licenseText.value = null;
+        licenseCopied.value = false;
+        confirmingRevoke.value = false;
+        toast.success(`License revoked for ${licensing.value.name}.`, {
+            description: 'Every previously issued license is now invalid — each kiosk needs a new one pasted in.',
+        });
+    } catch {
+        licenseError.value = 'Could not revoke the license for this organization.';
+    } finally {
+        revokingLicense.value = false;
+    }
+}
+
+async function copyLicense() {
+    if (!licenseText.value) {
+        return;
+    }
+
+    await navigator.clipboard.writeText(licenseText.value);
+    licenseCopied.value = true;
+}
 </script>
 
 <template>
@@ -180,7 +283,16 @@ const createOpen = ref(false);
                         <td class="p-3 whitespace-nowrap">
                             {{ formatDate(organization.created_at) }}
                         </td>
-                        <td class="p-3 text-right">
+                        <td class="p-3 text-right whitespace-nowrap">
+                            <Button
+                                v-if="canManageLicenses"
+                                variant="ghost"
+                                size="icon"
+                                title="Kiosk license"
+                                @click="openLicense(organization)"
+                            >
+                                <KeyRound class="size-4" />
+                            </Button>
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -234,7 +346,7 @@ const createOpen = ref(false);
                         <Checkbox
                             id="edit-active"
                             name="active"
-                            :default-checked="editing.active"
+                            :default-value="editing.active"
                         />
                         <Label for="edit-active">Active</Label>
                         <InputError :message="errors.active" />
@@ -249,6 +361,132 @@ const createOpen = ref(false);
                         </Button>
                     </DialogFooter>
                 </Form>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog
+            :open="licensing !== null"
+            @update:open="(open) => !open && (licensing = null)"
+        >
+            <DialogContent v-if="licensing">
+                <DialogHeader>
+                    <DialogTitle>License for {{ licensing.name }}</DialogTitle>
+                </DialogHeader>
+
+                <p class="text-muted-foreground text-sm">
+                    Generating a license creates a new one to paste into the
+                    kiosk's activation dialog. It's as sensitive as the
+                    organization's kiosk key — anyone holding it can read
+                    this organization's roster and record punches for it.
+                </p>
+
+                <p v-if="licenseError" class="text-destructive text-sm">
+                    {{ licenseError }}
+                </p>
+
+                <textarea
+                    v-if="licenseText"
+                    readonly
+                    :value="licenseText"
+                    rows="4"
+                    class="border-input bg-muted w-full resize-none rounded-md border p-2 font-mono text-xs"
+                    @focus="($event.target as HTMLTextAreaElement).select()"
+                />
+
+                <div class="flex gap-2">
+                    <Button :disabled="issuingLicense" @click="issueLicense">
+                        <KeyRound class="size-4" />
+                        {{
+                            issuingLicense
+                                ? 'Generating…'
+                                : licenseText
+                                  ? 'Generate new license'
+                                  : 'Generate license'
+                        }}
+                    </Button>
+                    <Button
+                        v-if="licenseText"
+                        variant="secondary"
+                        @click="copyLicense"
+                    >
+                        <component
+                            :is="licenseCopied ? Check : Copy"
+                            class="size-4"
+                        />
+                        {{ licenseCopied ? 'Copied' : 'Copy' }}
+                    </Button>
+                </div>
+
+                <div v-if="licenseHistory.length > 0" class="space-y-2">
+                    <p class="text-muted-foreground text-xs font-medium">
+                        Issuance history
+                    </p>
+                    <ul class="max-h-32 space-y-1 overflow-y-auto text-xs">
+                        <li
+                            v-for="(issuance, index) in licenseHistory"
+                            :key="index"
+                            class="text-muted-foreground flex justify-between gap-2"
+                        >
+                            <span>{{ formatDateTime(issuance.issued_at) }}</span>
+                            <span v-if="issuance.issued_by">{{
+                                issuance.issued_by
+                            }}</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="space-y-2 border-t pt-4">
+                    <p class="text-muted-foreground text-xs font-medium">
+                        Danger zone
+                    </p>
+
+                    <Button
+                        v-if="!confirmingRevoke"
+                        variant="destructive"
+                        size="sm"
+                        @click="confirmingRevoke = true"
+                    >
+                        <ShieldOff class="size-4" />
+                        Revoke license
+                    </Button>
+
+                    <template v-else>
+                        <p class="text-destructive text-sm">
+                            This immediately invalidates every license
+                            currently issued for this organization — every
+                            kiosk running it will need a newly generated
+                            license pasted in before it can log in or record
+                            punches again. This cannot be undone.
+                        </p>
+                        <div class="flex gap-2">
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                @click="confirmingRevoke = false"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                :disabled="revokingLicense"
+                                @click="revokeLicense"
+                            >
+                                {{
+                                    revokingLicense
+                                        ? 'Revoking…'
+                                        : 'Confirm revoke'
+                                }}
+                            </Button>
+                        </div>
+                    </template>
+                </div>
+
+                <DialogFooter class="gap-2">
+                    <DialogClose as-child>
+                        <Button variant="secondary">Close</Button>
+                    </DialogClose>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     </div>

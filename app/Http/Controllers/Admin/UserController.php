@@ -53,7 +53,10 @@ class UserController extends Controller
             'organizations' => $request->user()->isSystem()
                 ? Organization::orderBy('name')->get(['id', 'name'])
                 : Organization::where('id', $request->user()->organization_id)->get(['id', 'name']),
-            'roles' => Role::orderBy('rank')->get(['name', 'description']),
+            'roles' => Role::when(
+                ! $request->user()->isSystem(),
+                fn ($query) => $query->where('name', '!=', 'system'),
+            )->orderBy('rank')->get(['name', 'description']),
             'canManage' => $request->user()->isOwnerOrAbove(),
         ]);
     }

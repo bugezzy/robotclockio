@@ -11,7 +11,11 @@ const page = usePage();
 </script>
 
 <template>
-    <Head title="RobotClock — Scheduling that runs itself">
+    <Head title="RobotClock — RFID time tracking for clubs and teams">
+        <meta
+            name="description"
+            content="RobotClock is an RFID-based time clock for clubs and teams: each member's RFID tag tracks their individual hours at a kiosk, while admins manage teams, cards, and attendance from one dashboard."
+        />
         <link rel="preconnect" href="https://rsms.me/" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     </Head>

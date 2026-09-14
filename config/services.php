@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    /*
+    | The PostgREST-facing project — scheme+host only, and the publishable
+    | (anon) key — that kiosk licences point at. Distinct from the
+    | SUPABASE_DB_* connection above, which is the direct Postgres link this
+    | application itself uses.
+    */
+    'supabase' => [
+        'url' => env('SUPABASE_URL'),
+        'publishable_key' => env('SUPABASE_PUBLISHABLE_KEY'),
+    ],
+
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET_KEY'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
 ];

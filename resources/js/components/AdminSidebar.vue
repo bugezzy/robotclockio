@@ -4,7 +4,10 @@ import {
     Building2,
     Clock,
     CreditCard,
+    Download,
     LayoutGrid,
+    Package,
+    ShoppingCart,
     User,
     UsersRound,
 } from '@lucide/vue';
@@ -32,6 +35,11 @@ const page = usePage<{ auth: Auth }>();
 const canSeeOrganizations = computed(() =>
     ['owner', 'system'].includes(page.props.auth.user.role),
 );
+// Only an owner has an organization to ship a store order to.
+const isOwner = computed(() => page.props.auth.user.role === 'owner');
+// Only system administers the catalog — it has no organization of its own
+// to buy from.
+const isSystem = computed(() => page.props.auth.user.role === 'system');
 
 const mainNavItems = computed<NavItem[]>(() => [
     {
@@ -68,6 +76,29 @@ const mainNavItems = computed<NavItem[]>(() => [
         href: admin.punches.index(),
         icon: Clock,
     },
+    {
+        title: 'Downloads',
+        href: admin.downloads.index(),
+        icon: Download,
+    },
+    ...(isOwner.value
+        ? [
+              {
+                  title: 'Store',
+                  href: admin.store.index(),
+                  icon: ShoppingCart,
+              },
+          ]
+        : []),
+    ...(isSystem.value
+        ? [
+              {
+                  title: 'Products',
+                  href: admin.products.index(),
+                  icon: Package,
+              },
+          ]
+        : []),
 ]);
 
 const footerNavItems: NavItem[] = [

@@ -205,7 +205,7 @@ const createOrganizationId = ref(props.organizations[0]?.id ?? '');
                             <Checkbox
                                 id="create-active"
                                 name="active"
-                                default-checked
+                                :default-value="true"
                             />
                             <Label for="create-active">Active</Label>
                         </div>

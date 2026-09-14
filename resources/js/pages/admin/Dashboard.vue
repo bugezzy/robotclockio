@@ -6,8 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import admin from '@/routes/admin';
 
 type Stats = {
-    organizations: number;
-    activeOrganizations: number;
+    primary: {
+        label: string;
+        count: number;
+        subLabel: string;
+        subCount: number;
+    } | null;
     users: number;
     activeCards: number;
     punchesToday: number;
@@ -51,24 +55,24 @@ function formatDateTime(value: string): string {
     <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto p-4">
         <Heading
             title="Dashboard"
-            description="Overview of RobotClock organization activity."
+            description="Overview of your activity."
         />
 
         <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-            <Card>
+            <Card v-if="stats.primary">
                 <CardHeader>
                     <CardTitle
                         class="text-muted-foreground text-sm font-medium"
                     >
-                        Organizations
+                        {{ stats.primary.label }}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p class="text-2xl font-semibold">
-                        {{ stats.organizations }}
+                        {{ stats.primary.count }}
                     </p>
                     <p class="text-muted-foreground text-xs">
-                        {{ stats.activeOrganizations }} active
+                        {{ stats.primary.subCount }} {{ stats.primary.subLabel }}
                     </p>
                 </CardContent>
             </Card>
