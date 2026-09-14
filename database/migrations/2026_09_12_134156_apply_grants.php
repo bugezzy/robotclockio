@@ -38,16 +38,35 @@ return new class extends Migration
             SQL);
 
         DB::statement(<<<'SQL'
-            revoke all on public.shift_sessions, public.daily_hours from anon, authenticated
+            do $$
+            begin
+                if to_regclass('public.shift_sessions') is not null then
+                    execute 'revoke all on public.shift_sessions from anon, authenticated';
+                end if;
+
+                if to_regclass('public.daily_hours') is not null then
+                    execute 'revoke all on public.daily_hours from anon, authenticated';
+                end if;
+            end $$
             SQL);
 
         DB::statement(<<<'SQL'
-            revoke all on
-                public.sessions, public.password_reset_tokens,
-                public.cache, public.cache_locks,
-                public.jobs, public.job_batches, public.failed_jobs,
-                public.passkeys, public.migrations
-                from anon, authenticated
+            do $$
+            declare
+                t text;
+            begin
+                foreach t in array array[
+                    'sessions', 'password_reset_tokens',
+                    'cache', 'cache_locks',
+                    'jobs', 'job_batches', 'failed_jobs',
+                    'passkeys', 'migrations'
+                ]
+                loop
+                    if to_regclass('public.' || t) is not null then
+                        execute format('revoke all on public.%I from anon, authenticated', t);
+                    end if;
+                end loop;
+            end $$
             SQL);
 
         DB::statement('revoke all on all functions in schema public from public, anon, authenticated');

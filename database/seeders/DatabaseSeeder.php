@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
         // real users table), so this stays a simple, dependency-free login
         // with full admin panel access.
         User::factory()->system()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'James Moyers',
+            'email' => 'bugezzy@gmail.com',
         ]);
 
         $this->call(DemoDataSeeder::class);
