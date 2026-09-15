@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Form, Head, setLayoutProps } from '@inertiajs/vue3';
-import { computed, ref, watchEffect } from 'vue';
+import { computed, nextTick, onMounted, ref, watchEffect } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,10 +40,25 @@ watchEffect(() => {
     });
 });
 
+/**
+ * The native `autofocus` HTML attribute only fires on a real page load, but
+ * this page is always reached via an Inertia client-side visit, so it's
+ * focused explicitly instead — both on mount and when switching input modes.
+ */
+const focusFirstField = (): void => {
+    nextTick(() => {
+        const selector = showRecoveryInput.value ? '#recovery_code' : '#otp';
+        document.querySelector<HTMLInputElement>(selector)?.focus();
+    });
+};
+
+onMounted(focusFirstField);
+
 const toggleRecoveryMode = (clearErrors: () => void): void => {
     showRecoveryInput.value = !showRecoveryInput.value;
     clearErrors();
     code.value = '';
+    focusFirstField();
 };
 </script>
 
@@ -106,6 +121,7 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                 #default="{ errors, processing, clearErrors }"
             >
                 <Input
+                    id="recovery_code"
                     name="recovery_code"
                     type="text"
                     placeholder="Enter recovery code"
