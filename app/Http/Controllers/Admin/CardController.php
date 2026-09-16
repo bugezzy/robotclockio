@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Card;
+use App\Models\Punch;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -48,6 +50,7 @@ class CardController extends Controller
                     'organization_name' => $card->employee?->organization?->name,
                 ]),
             'users' => $this->scopedEmployees($request)->orderBy('full_name')->get(['id', 'full_name']),
+            'unmatchedScans' => $this->recentUnmatchedScans($request),
         ]);
     }
 
@@ -93,6 +96,39 @@ class CardController extends Controller
         $card->update(['revoked_at' => now()]);
 
         return back();
+    }
+
+    /**
+     * Card UIDs scanned at a kiosk recently that don't belong to anyone yet
+     * — a punch is recorded with a null user_id when the scanning card
+     * isn't currently issued to anyone. Surfacing these lets an admin pick
+     * the UID from a real scan instead of transcribing it off the card by
+     * hand. Scoped by organization like everything else here; a card is
+     * only truly "unmatched" if it isn't currently an active card for
+     * someone else's now-revoked assignment.
+     *
+     * @return Collection<int, array{card_uid: string, last_seen_at: string}>
+     */
+    private function recentUnmatchedScans(Request $request): Collection
+    {
+        $issuedCardUids = Card::whereNull('revoked_at')->pluck('card_uid');
+
+        $query = Punch::whereNull('user_id')->whereNotIn('card_uid', $issuedCardUids);
+
+        if (! $request->user()->isSystem()) {
+            $query->where('organization_id', $request->user()->organization_id);
+        }
+
+        return $query->select('card_uid')
+            ->selectRaw('max(punched_at) as last_seen_at')
+            ->groupBy('card_uid')
+            ->orderByDesc('last_seen_at')
+            ->limit(10)
+            ->get()
+            ->map(fn (Punch $scan) => [
+                'card_uid' => $scan->card_uid,
+                'last_seen_at' => $scan->last_seen_at,
+            ]);
     }
 
     /**

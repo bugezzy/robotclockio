@@ -51,6 +51,7 @@ const props = defineProps<{
     organizations: OrganizationOption[];
     roles: RoleOption[];
     canManage: boolean;
+    isSystem: boolean;
 }>();
 
 defineOptions({
@@ -105,7 +106,7 @@ const createOrganizationId = ref(props.organizations[0]?.id ?? '');
                             <DialogTitle>New user</DialogTitle>
                         </DialogHeader>
 
-                        <div v-if="organizations.length > 1" class="grid gap-2">
+                        <div v-if="isSystem" class="grid gap-2">
                             <Label for="create-organization"
                                 >Organization</Label
                             >

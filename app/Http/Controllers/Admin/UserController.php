@@ -58,6 +58,7 @@ class UserController extends Controller
                 fn ($query) => $query->where('name', '!=', 'system'),
             )->orderBy('rank')->get(['name', 'description']),
             'canManage' => $request->user()->isOwnerOrAbove(),
+            'isSystem' => $request->user()->isSystem(),
         ]);
     }
 
@@ -73,7 +74,7 @@ class UserController extends Controller
             'email' => ['nullable', 'email', 'max:255', Rule::unique(User::class, 'email')],
             'role' => ['required', Rule::exists(Role::class, 'name')],
             'team_id' => ['nullable', 'uuid', Rule::exists(Team::class, 'id')],
-            'organization_id' => ['nullable', 'uuid', Rule::exists(Organization::class, 'id')],
+            'organization_id' => [Rule::requiredIf($request->input('role') !== 'system'), 'uuid', Rule::exists(Organization::class, 'id')],
         ]);
 
         // An unchecked checkbox submits nothing at all, so "active" is read

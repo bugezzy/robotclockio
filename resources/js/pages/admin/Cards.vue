@@ -37,10 +37,12 @@ type CardRow = {
 };
 
 type UserOption = { id: string; full_name: string };
+type UnmatchedScan = { card_uid: string; last_seen_at: string };
 
 defineProps<{
     cards: CardRow[];
     users: UserOption[];
+    unmatchedScans: UnmatchedScan[];
 }>();
 
 defineOptions({
@@ -61,6 +63,7 @@ function formatDateTime(value: string): string {
 
 const revoking = ref<CardRow | null>(null);
 const createOpen = ref(false);
+const cardUid = ref('');
 </script>
 
 <template>
@@ -81,7 +84,7 @@ const createOpen = ref(false);
                     <Form
                         v-bind="CardController.store.form()"
                         reset-on-success
-                        @success="createOpen = false"
+                        @success="createOpen = false; cardUid = ''"
                         class="space-y-4"
                         v-slot="{ errors, processing }"
                     >
@@ -115,6 +118,7 @@ const createOpen = ref(false);
                             <Label for="create-card-uid">Card UID</Label>
                             <Input
                                 id="create-card-uid"
+                                v-model="cardUid"
                                 name="card_uid"
                                 required
                                 placeholder="04A1B2C3"
@@ -124,6 +128,38 @@ const createOpen = ref(false);
                             <p class="text-muted-foreground text-xs">
                                 Hex characters only, as printed on the card or
                                 scanned by the reader.
+                            </p>
+                        </div>
+
+                        <div
+                            v-if="unmatchedScans.length > 0"
+                            class="grid gap-2"
+                        >
+                            <Label>Don't know the UID?</Label>
+                            <div
+                                class="border-sidebar-border/70 dark:border-sidebar-border flex max-h-32 flex-col gap-1 overflow-y-auto rounded-md border p-2"
+                            >
+                                <button
+                                    v-for="scan in unmatchedScans"
+                                    :key="scan.card_uid"
+                                    type="button"
+                                    class="hover:bg-accent flex items-center justify-between rounded px-2 py-1 text-left text-sm"
+                                    @click="cardUid = scan.card_uid"
+                                >
+                                    <span class="font-mono">{{
+                                        scan.card_uid
+                                    }}</span>
+                                    <span
+                                        class="text-muted-foreground text-xs"
+                                        >{{
+                                            formatDateTime(scan.last_seen_at)
+                                        }}</span
+                                    >
+                                </button>
+                            </div>
+                            <p class="text-muted-foreground text-xs">
+                                Recent kiosk scans that didn't match anyone.
+                                Click one to fill it in above.
                             </p>
                         </div>
 

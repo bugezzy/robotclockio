@@ -38,4 +38,39 @@ class UserManagementTest extends TestCase
                 ),
             );
     }
+
+    public function test_system_must_pick_an_organization_when_creating_a_non_system_user(): void
+    {
+        $system = User::factory()->system()->create();
+
+        $this->actingAs($system)
+            ->post(route('admin.users.store'), [
+                'name' => 'New Owner',
+                'role' => 'owner',
+                'active' => true,
+            ])
+            ->assertSessionHasErrors('organization_id');
+    }
+
+    public function test_system_can_create_an_owner_with_no_team(): void
+    {
+        $system = User::factory()->system()->create();
+        $organization = Organization::factory()->create();
+
+        $this->actingAs($system)
+            ->post(route('admin.users.store'), [
+                'name' => 'New Owner',
+                'role' => 'owner',
+                'organization_id' => $organization->id,
+                'active' => true,
+            ])
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('users', [
+            'full_name' => 'New Owner',
+            'role' => 'owner',
+            'organization_id' => $organization->id,
+            'team_id' => null,
+        ], 'sqlite');
+    }
 }
