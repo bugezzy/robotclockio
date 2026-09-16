@@ -70,10 +70,10 @@ class UserController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', Rule::exists('roles', 'name')],
-            'team_id' => ['nullable', 'uuid', 'exists:teams,id'],
-            'organization_id' => ['nullable', 'uuid', 'exists:organizations,id'],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique(User::class, 'email')],
+            'role' => ['required', Rule::exists(Role::class, 'name')],
+            'team_id' => ['nullable', 'uuid', Rule::exists(Team::class, 'id')],
+            'organization_id' => ['nullable', 'uuid', Rule::exists(Organization::class, 'id')],
         ]);
 
         // An unchecked checkbox submits nothing at all, so "active" is read
@@ -107,9 +107,9 @@ class UserController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($targetUser->id)],
-            'role' => ['required', Rule::exists('roles', 'name')],
-            'team_id' => ['nullable', 'uuid', 'exists:teams,id'],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($targetUser->id)],
+            'role' => ['required', Rule::exists(Role::class, 'name')],
+            'team_id' => ['nullable', 'uuid', Rule::exists(Team::class, 'id')],
         ]);
 
         // An unchecked checkbox submits nothing at all, so "active" is read

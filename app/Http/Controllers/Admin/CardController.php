@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -59,7 +60,7 @@ class CardController extends Controller
     {
         $data = $request->validate([
             'card_uid' => ['required', 'string', 'regex:/^[0-9A-Fa-f]{4,32}$/'],
-            'user_id' => ['required', 'uuid', 'exists:users,id'],
+            'user_id' => ['required', 'uuid', Rule::exists(User::class, 'id')],
             'label' => ['nullable', 'string'],
         ]);
 
