@@ -107,6 +107,8 @@ class UserController extends Controller
             403
         );
 
+        \Illuminate\Support\Facades\Log::info('TEMP-DEBUG users.update incoming', ['keys' => array_keys($request->all()), 'discord_user_id' => $request->input('discord_user_id'), 'has_discord_key' => $request->has('discord_user_id')]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($targetUser->id)],
@@ -124,6 +126,8 @@ class UserController extends Controller
         }
 
         $targetUser->update($data);
+
+        \Illuminate\Support\Facades\Log::info('TEMP-DEBUG users.update saved', ['validated_keys' => array_keys($data), 'stored_discord_user_id' => $targetUser->fresh()->discord_user_id]);
 
         return back();
     }
