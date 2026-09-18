@@ -23,10 +23,10 @@ import { privacy } from '@/routes';
 
     <h2>2. The Service</h2>
     <p>
-        RobotClock is an RFID-based time clock for clubs and teams. Members
+        RobotClock is an RFID-based time clock for clubs and teams. People
         tap an RFID card at a kiosk (or use the /clock command in their
         organization's Discord server) to record when they clock in and out.
-        Administrators manage members, teams, cards, and attendance from the
+        Administrators manage users, teams, cards, and attendance from the
         dashboard.
     </p>
 
@@ -79,10 +79,10 @@ import { privacy } from '@/routes';
 
     <h2>6. Your organization's responsibilities</h2>
     <p>
-        Organizations control the members whose information is entered into
-        RobotClock. Each organization is responsible for giving its members
+        Organizations control the people whose information is entered into
+        RobotClock. Each organization is responsible for giving those people
         any required notices, obtaining any required consents (including from
-        parents or guardians when members are minors), and using recorded time
+        parents or guardians when they are minors), and using recorded time
         lawfully. RobotClock is a record-keeping tool. It does not provide
         payroll, legal, or labor-compliance advice, and organizations are
         responsible for verifying that recorded times are correct.

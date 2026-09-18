@@ -13,7 +13,7 @@ import { terms } from '@/routes';
     <h2>1. Who we are and what this covers</h2>
     <p>
         RobotClock provides an RFID-based time clock for clubs and teams: a
-        kiosk where members tap a card to clock in and out, a web dashboard
+        kiosk where people tap a card to clock in and out, a web dashboard
         for administrators, and a Discord bot that supports the /clock
         command. This policy explains what personal information we collect
         through those services, how we use it, and the choices you have. It
@@ -21,8 +21,8 @@ import { terms } from '@/routes';
     </p>
     <p>
         Most information in RobotClock is entered by the organization you
-        belong to. The organization decides who has an account, so for member
-        time records we handle information on the organization's behalf, and
+        belong to. The organization decides who has an account, so for time
+        records we handle information on the organization's behalf, and
         the organization is your first point of contact for questions about
         it.
     </p>
