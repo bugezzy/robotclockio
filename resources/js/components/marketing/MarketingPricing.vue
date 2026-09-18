@@ -99,5 +99,9 @@ const tiers = [
                 </Button>
             </div>
         </div>
+
+        <p class="mt-8 text-center text-xs text-muted-foreground">
+            Currently everything is free, but maybe we will charge one day...
+        </p>
     </section>
 </template>
