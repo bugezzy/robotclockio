@@ -270,7 +270,7 @@ const visibleUsers = computed(() => {
                             >
                                 <SelectTrigger
                                     id="create-organization"
-                                    class="w-full"
+                                    class="w-full min-w-0"
                                 >
                                     <SelectValue
                                         placeholder="Select an organization"
@@ -317,7 +317,10 @@ const visibleUsers = computed(() => {
                         <div class="grid gap-2">
                             <Label for="create-role">Role</Label>
                             <Select name="role" default-value="member">
-                                <SelectTrigger id="create-role" class="w-full">
+                                <SelectTrigger
+                                    id="create-role"
+                                    class="w-full min-w-0"
+                                >
                                     <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -336,7 +339,10 @@ const visibleUsers = computed(() => {
                         <div class="grid gap-2">
                             <Label for="create-team">Team</Label>
                             <Select name="team_id">
-                                <SelectTrigger id="create-team" class="w-full">
+                                <SelectTrigger
+                                    id="create-team"
+                                    class="w-full min-w-0"
+                                >
                                     <SelectValue placeholder="No team" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -629,7 +635,10 @@ const visibleUsers = computed(() => {
                     <div class="grid gap-2">
                         <Label for="edit-role">Role</Label>
                         <Select name="role" :default-value="editing.role">
-                            <SelectTrigger id="edit-role" class="w-full">
+                            <SelectTrigger
+                                id="edit-role"
+                                class="w-full min-w-0"
+                            >
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -651,7 +660,10 @@ const visibleUsers = computed(() => {
                             name="team_id"
                             :default-value="editing.team_id ?? undefined"
                         >
-                            <SelectTrigger id="edit-team" class="w-full">
+                            <SelectTrigger
+                                id="edit-team"
+                                class="w-full min-w-0"
+                            >
                                 <SelectValue placeholder="No team" />
                             </SelectTrigger>
                             <SelectContent>
