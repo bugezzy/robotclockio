@@ -51,4 +51,16 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    /*
+    | The Discord bot that lets members clock in/out with /clock in this
+    | organization's Discord server. public_key verifies each interaction
+    | request came from Discord; bot_token and application_id are used to
+    | register the /clock command (see DiscordRegisterCommands).
+    */
+    'discord' => [
+        'public_key' => env('DISCORD_PUBLIC_KEY'),
+        'bot_token' => env('DISCORD_BOT_TOKEN'),
+        'application_id' => env('DISCORD_APPLICATION_ID'),
+    ],
+
 ];

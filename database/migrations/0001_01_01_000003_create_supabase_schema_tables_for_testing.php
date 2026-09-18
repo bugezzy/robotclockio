@@ -47,6 +47,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->text('description')->nullable();
             $table->uuid('kiosk_key')->nullable()->unique();
+            $table->text('discord_guild_id')->nullable()->unique();
             $table->boolean('active')->default(true);
             $table->timestamps();
         });

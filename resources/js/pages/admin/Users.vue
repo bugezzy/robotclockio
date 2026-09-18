@@ -39,6 +39,7 @@ type UserRow = {
     organization_id: string | null;
     organization_name: string | null;
     has_card: boolean;
+    discord_user_id: string | null;
 };
 
 type TeamOption = { id: string; name: string; organization_id: string };
@@ -99,7 +100,7 @@ const createOrganizationId = ref(props.organizations[0]?.id ?? '');
                         v-bind="UserController.store.form()"
                         reset-on-success
                         @success="createOpen = false"
-                        class="space-y-4"
+                        class="min-w-0 space-y-4"
                         v-slot="{ errors, processing }"
                     >
                         <DialogHeader>
@@ -320,7 +321,7 @@ const createOrganizationId = ref(props.organizations[0]?.id ?? '');
                 <Form
                     v-bind="UserController.update.form(editing.id)"
                     @success="editing = null"
-                    class="space-y-4"
+                    class="min-w-0 space-y-4"
                     v-slot="{ errors, processing }"
                 >
                     <DialogHeader>
@@ -394,11 +395,29 @@ const createOrganizationId = ref(props.organizations[0]?.id ?? '');
                         <InputError :message="errors.team_id" />
                     </div>
 
+                    <div class="grid gap-2">
+                        <Label for="edit-discord-user-id"
+                            >Discord user ID</Label
+                        >
+                        <Input
+                            id="edit-discord-user-id"
+                            name="discord_user_id"
+                            :default-value="editing.discord_user_id ?? ''"
+                        />
+                        <InputError :message="errors.discord_user_id" />
+                        <p class="text-muted-foreground text-xs">
+                            Lets this person clock in/out with
+                            <code>/clock</code> in their organization's Discord
+                            server. Found via Discord's "Copy User ID" (enable
+                            Developer Mode first).
+                        </p>
+                    </div>
+
                     <div class="flex items-center gap-2">
                         <Checkbox
                             id="edit-active"
                             name="active"
-                            :default-checked="editing.active"
+                            :default-value="editing.active"
                         />
                         <Label for="edit-active">Active</Label>
                     </div>

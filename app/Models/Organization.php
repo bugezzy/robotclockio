@@ -18,11 +18,12 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string|null $description
  * @property string $kiosk_key
+ * @property string|null $discord_guild_id
  * @property bool $active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'description', 'active'])]
+#[Fillable(['name', 'description', 'active', 'discord_guild_id'])]
 class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */

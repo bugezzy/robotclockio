@@ -73,4 +73,39 @@ class UserManagementTest extends TestCase
             'team_id' => null,
         ], 'sqlite');
     }
+
+    public function test_owner_can_link_a_discord_user_id_to_a_member(): void
+    {
+        $organization = Organization::factory()->create();
+        $owner = User::factory()->owner()->create(['organization_id' => $organization->id]);
+        $employee = User::factory()->create(['organization_id' => $organization->id]);
+
+        $this->actingAs($owner)
+            ->put(route('admin.users.update', $employee), [
+                'name' => $employee->name,
+                'role' => 'member',
+                'discord_user_id' => '111111111111111111',
+                'active' => true,
+            ])
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertSame('111111111111111111', $employee->refresh()->discord_user_id);
+    }
+
+    public function test_a_discord_user_id_cannot_be_linked_to_two_members(): void
+    {
+        $organization = Organization::factory()->create();
+        $owner = User::factory()->owner()->create(['organization_id' => $organization->id]);
+        User::factory()->create(['organization_id' => $organization->id, 'discord_user_id' => '111111111111111111']);
+        $employee = User::factory()->create(['organization_id' => $organization->id]);
+
+        $this->actingAs($owner)
+            ->put(route('admin.users.update', $employee), [
+                'name' => $employee->name,
+                'role' => 'member',
+                'discord_user_id' => '111111111111111111',
+                'active' => true,
+            ])
+            ->assertSessionHasErrors('discord_user_id');
+    }
 }

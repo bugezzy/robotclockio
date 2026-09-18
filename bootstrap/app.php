@@ -18,9 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
-        // Stripe can't carry our CSRF token; the webhook is authenticated
-        // by its own signature instead (see StripeWebhookController).
-        $middleware->validateCsrfTokens(except: ['stripe/webhook']);
+        // Stripe and Discord can't carry our CSRF token; each webhook is
+        // authenticated by its own signature instead (see
+        // StripeWebhookController and DiscordInteractionController).
+        $middleware->validateCsrfTokens(except: ['stripe/webhook', 'discord/interactions']);
 
         $middleware->web(append: [
             HandleAppearance::class,

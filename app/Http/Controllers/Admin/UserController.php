@@ -46,6 +46,7 @@ class UserController extends Controller
                     'organization_id' => $user->organization_id,
                     'organization_name' => $user->organization?->name,
                     'has_card' => $user->cards_count > 0,
+                    'discord_user_id' => $user->discord_user_id,
                 ]),
             'teams' => $request->user()->isSystem()
                 ? Team::orderBy('name')->get(['id', 'name', 'organization_id'])
@@ -111,6 +112,7 @@ class UserController extends Controller
             'email' => ['nullable', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($targetUser->id)],
             'role' => ['required', Rule::exists(Role::class, 'name')],
             'team_id' => ['nullable', 'uuid', Rule::exists(Team::class, 'id')],
+            'discord_user_id' => ['nullable', 'string', 'max:32', Rule::unique(User::class, 'discord_user_id')->ignore($targetUser->id)],
         ]);
 
         // An unchecked checkbox submits nothing at all, so "active" is read

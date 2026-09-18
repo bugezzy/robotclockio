@@ -27,6 +27,7 @@ type OrganizationRow = {
     name: string;
     description: string | null;
     active: boolean;
+    discord_guild_id: string | null;
     teams_count: number;
     employees_count: number;
     created_at: string;
@@ -340,6 +341,24 @@ async function copyLicense() {
                             :default-value="editing.description ?? ''"
                         />
                         <InputError :message="errors.description" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="edit-discord-guild-id"
+                            >Discord server ID</Label
+                        >
+                        <Input
+                            id="edit-discord-guild-id"
+                            name="discord_guild_id"
+                            :default-value="editing.discord_guild_id ?? ''"
+                        />
+                        <InputError :message="errors.discord_guild_id" />
+                        <p class="text-muted-foreground text-xs">
+                            Links this organization to a Discord server so
+                            its members can run <code>/clock</code> there.
+                            Found via Discord's "Copy Server ID" (enable
+                            Developer Mode first).
+                        </p>
                     </div>
 
                     <div v-if="canCreate" class="flex items-center gap-2">

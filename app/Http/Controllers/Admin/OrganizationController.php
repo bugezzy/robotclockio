@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,6 +37,7 @@ class OrganizationController extends Controller
                     'name' => $organization->name,
                     'description' => $organization->description,
                     'active' => $organization->active,
+                    'discord_guild_id' => $organization->discord_guild_id,
                     'teams_count' => $organization->teams_count,
                     'employees_count' => $organization->employees_count,
                     'created_at' => $organization->created_at->toIso8601String(),
@@ -78,6 +80,7 @@ class OrganizationController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'discord_guild_id' => ['nullable', 'string', 'max:32', Rule::unique(Organization::class, 'discord_guild_id')->ignore($organization->id)],
         ]);
 
         // An unchecked checkbox submits nothing at all, so "active" is read

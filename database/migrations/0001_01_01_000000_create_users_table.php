@@ -30,6 +30,7 @@ return new class extends Migration
                 $table->string('role')->default('member');
                 $table->boolean('active')->default(true);
                 $table->uuid('organization_id')->nullable();
+                $table->text('discord_user_id')->nullable()->unique();
                 $table->timestamp('email_verified_at')->nullable();
                 $table->text('two_factor_secret')->nullable();
                 $table->text('two_factor_recovery_codes')->nullable();
