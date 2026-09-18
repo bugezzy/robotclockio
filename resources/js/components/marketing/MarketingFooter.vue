@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
+import { privacy, terms } from '@/routes';
+
 const year = new Date().getFullYear();
 </script>
 
@@ -14,6 +17,8 @@ const year = new Date().getFullYear();
                 <a href="#features" class="hover:text-foreground">Features</a>
                 <a href="#pricing" class="hover:text-foreground">Pricing</a>
                 <a href="#faq" class="hover:text-foreground">FAQ</a>
+                <Link :href="terms()" class="hover:text-foreground">Terms</Link>
+                <Link :href="privacy()" class="hover:text-foreground">Privacy</Link>
             </nav>
             <p>&copy; {{ year }} RobotClock.io. All rights reserved.</p>
         </div>

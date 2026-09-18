@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
 
+Route::inertia('terms', 'legal/Terms')->name('terms');
+Route::inertia('privacy', 'legal/Privacy')->name('privacy');
+
 // Server-to-server, signature-verified — never behind auth, and exempted
 // from CSRF in bootstrap/app.php since Stripe can't carry our token.
 Route::post('stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
