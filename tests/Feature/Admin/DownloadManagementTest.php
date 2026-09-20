@@ -4,7 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Release;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -12,7 +12,7 @@ use Tests\TestCase;
 
 class DownloadManagementTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_downloads_page_shows_no_build_when_none_published(): void
     {

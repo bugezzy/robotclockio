@@ -6,13 +6,13 @@ use App\Models\Card;
 use App\Models\Organization;
 use App\Models\Punch;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CardManagementTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_unmatched_scans_include_punches_with_no_user(): void
     {

@@ -5,13 +5,13 @@ namespace Tests\Feature;
 use App\Models\Organization;
 use App\Models\Punch;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class DiscordInteractionTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     private const DISCORD_USER_ID = '111111111111111111';
 

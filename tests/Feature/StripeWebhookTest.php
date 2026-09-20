@@ -3,14 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Testing\TestResponse;
 use Stripe\WebhookSignature;
 use Tests\TestCase;
 
 class StripeWebhookTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     private const WEBHOOK_SECRET = 'whsec_test_secret';
 
