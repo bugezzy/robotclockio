@@ -16,7 +16,9 @@ return new class extends Migration
      *
      * Card UIDs that have been scanned at a kiosk but aren't tied to anyone
      * (a punch is recorded with a null user_id when the card isn't issued).
-     * Like every admin_* function, it resolves the caller through
+     * A UID that currently has an active card is left out, so what remains
+     * are cards still waiting to be issued — including revoked ones that
+     * got scanned. Like every admin_* function, it resolves the caller through
      * private.session_actor(p_token) and filters on that caller's
      * organization — a system-tier caller sees across all of them.
      */
@@ -41,6 +43,8 @@ return new class extends Migration
                 from public.punches p
                 where p.user_id is null
                   and (v_role = 'system' or p.organization_id = v_org)
+                  and not exists (select 1 from public.cards c
+                                  where c.card_uid = p.card_uid and c.revoked_at is null)
                 group by p.card_uid
                 order by max(p.punched_at) desc;
             end;
