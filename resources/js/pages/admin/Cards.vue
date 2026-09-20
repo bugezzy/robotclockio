@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
-import { CreditCard, Plus } from '@lucide/vue';
-import { ref } from 'vue';
+import {
+    ArrowDown,
+    ArrowUp,
+    ArrowUpDown,
+    CreditCard,
+    Plus,
+    Search,
+    X,
+} from '@lucide/vue';
+import { computed, ref } from 'vue';
 import CardController from '@/actions/App/Http/Controllers/Admin/CardController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -36,10 +44,10 @@ type CardRow = {
     organization_name: string | null;
 };
 
-type UserOption = { id: string; full_name: string };
+type UserOption = { id: string; full_name: string; email: string | null };
 type UnmatchedScan = { card_uid: string; last_seen_at: string };
 
-defineProps<{
+const props = defineProps<{
     cards: CardRow[];
     users: UserOption[];
     unmatchedScans: UnmatchedScan[];
@@ -64,6 +72,145 @@ function formatDateTime(value: string): string {
 const revoking = ref<CardRow | null>(null);
 const createOpen = ref(false);
 const cardUid = ref('');
+
+type SortKey =
+    | 'card_uid'
+    | 'user'
+    | 'organization'
+    | 'label'
+    | 'status'
+    | 'issued';
+
+const columns: { key: SortKey; label: string }[] = [
+    { key: 'card_uid', label: 'Card UID' },
+    { key: 'user', label: 'User' },
+    { key: 'organization', label: 'Organization' },
+    { key: 'label', label: 'Label' },
+    { key: 'status', label: 'Status' },
+    { key: 'issued', label: 'Issued' },
+];
+
+const search = ref('');
+const statusFilter = ref('all');
+const organizationFilter = ref('all');
+const sortKey = ref<SortKey>('status');
+const sortDirection = ref<'asc' | 'desc'>('asc');
+
+const organizationOptions = computed(() =>
+    [
+        ...new Set(
+            props.cards
+                .map((card) => card.organization_name)
+                .filter((name): name is string => name !== null),
+        ),
+    ].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })),
+);
+
+const hasActiveFilters = computed(
+    () =>
+        search.value.trim() !== '' ||
+        statusFilter.value !== 'all' ||
+        organizationFilter.value !== 'all',
+);
+
+function clearFilters(): void {
+    search.value = '';
+    statusFilter.value = 'all';
+    organizationFilter.value = 'all';
+}
+
+function toggleSort(key: SortKey): void {
+    if (sortKey.value === key) {
+        sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+
+        return;
+    }
+
+    sortKey.value = key;
+    sortDirection.value = 'asc';
+}
+
+/**
+ * Empty values are returned as '' and always sort last, regardless of
+ * direction. Issued sorts by timestamp; the rest by their displayed text.
+ */
+function sortValue(card: CardRow, key: SortKey): string | number {
+    switch (key) {
+        case 'card_uid':
+            return card.card_uid;
+        case 'user':
+            return card.employee_name ?? '';
+        case 'organization':
+            return card.organization_name ?? '';
+        case 'label':
+            return card.label ?? '';
+        case 'status':
+            return card.revoked_at ? 'Revoked' : 'Active';
+        case 'issued':
+            return Date.parse(card.issued_at);
+    }
+}
+
+function compareValues(a: string | number, b: string | number): number {
+    if (typeof a === 'number' && typeof b === 'number') {
+        return a - b;
+    }
+
+    return String(a).localeCompare(String(b), undefined, {
+        sensitivity: 'base',
+    });
+}
+
+const visibleCards = computed(() => {
+    const term = search.value.trim().toLowerCase();
+
+    const matches = props.cards.filter((card) => {
+        if (
+            term !== '' &&
+            ![
+                card.card_uid,
+                card.employee_name,
+                card.organization_name,
+                card.label,
+            ].some((field) => field?.toLowerCase().includes(term))
+        ) {
+            return false;
+        }
+
+        if (
+            statusFilter.value !== 'all' &&
+            (card.revoked_at === null) !== (statusFilter.value === 'active')
+        ) {
+            return false;
+        }
+
+        return (
+            organizationFilter.value === 'all' ||
+            card.organization_name === organizationFilter.value
+        );
+    });
+
+    return matches.sort((a, b) => {
+        const first = sortValue(a, sortKey.value);
+        const second = sortValue(b, sortKey.value);
+
+        if (first === '' && second !== '') {
+            return 1;
+        }
+
+        if (second === '' && first !== '') {
+            return -1;
+        }
+
+        const order = compareValues(first, second);
+
+        if (order === 0) {
+            return Date.parse(b.issued_at) - Date.parse(a.issued_at);
+        }
+
+        return sortDirection.value === 'asc' ? order : -order;
+    });
+});
 </script>
 
 <template>
@@ -107,7 +254,11 @@ const cardUid = ref('');
                                         :key="employee.id"
                                         :value="employee.id"
                                     >
-                                        {{ employee.full_name }}
+                                        {{
+                                            employee.email
+                                                ? `${employee.full_name} (${employee.email})`
+                                                : employee.full_name
+                                        }}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
@@ -186,6 +337,65 @@ const cardUid = ref('');
             </Dialog>
         </div>
 
+        <div v-if="cards.length > 0" class="flex flex-wrap items-center gap-2">
+            <div class="relative w-full sm:w-64">
+                <Search
+                    class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                />
+                <Input
+                    v-model="search"
+                    type="search"
+                    placeholder="Search UID, user, label…"
+                    aria-label="Search cards"
+                    class="pl-9"
+                />
+            </div>
+
+            <Select v-model="statusFilter">
+                <SelectTrigger class="w-36" aria-label="Filter by status">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Any status</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="revoked">Revoked</SelectItem>
+                </SelectContent>
+            </Select>
+
+            <Select
+                v-if="organizationOptions.length > 1"
+                v-model="organizationFilter"
+            >
+                <SelectTrigger class="w-44" aria-label="Filter by organization">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All organizations</SelectItem>
+                    <SelectItem
+                        v-for="organization in organizationOptions"
+                        :key="organization"
+                        :value="organization"
+                    >
+                        {{ organization }}
+                    </SelectItem>
+                </SelectContent>
+            </Select>
+
+            <Button
+                v-if="hasActiveFilters"
+                variant="ghost"
+                @click="clearFilters"
+            >
+                <X class="size-4" />
+                Clear
+            </Button>
+
+            <p class="text-muted-foreground ml-auto text-sm">
+                {{ visibleCards.length }} of {{ cards.length }}
+                {{ cards.length === 1 ? 'card' : 'cards' }}
+            </p>
+        </div>
+
         <div
             v-if="cards.length === 0"
             class="border-sidebar-border/70 dark:border-sidebar-border flex min-h-[50vh] flex-col items-center justify-center gap-3 rounded-xl border text-center"
@@ -203,19 +413,59 @@ const cardUid = ref('');
                     <tr
                         class="border-sidebar-border/70 dark:border-sidebar-border text-muted-foreground border-b text-left"
                     >
-                        <th class="p-3 font-medium">Card UID</th>
-                        <th class="p-3 font-medium">User</th>
-                        <th class="p-3 font-medium">Organization</th>
-                        <th class="p-3 font-medium">Label</th>
-                        <th class="p-3 font-medium">Status</th>
-                        <th class="p-3 font-medium">Issued</th>
+                        <th
+                            v-for="column in columns"
+                            :key="column.key"
+                            class="p-3 font-medium"
+                            :aria-sort="
+                                sortKey === column.key
+                                    ? sortDirection === 'asc'
+                                        ? 'ascending'
+                                        : 'descending'
+                                    : 'none'
+                            "
+                        >
+                            <button
+                                type="button"
+                                class="hover:text-foreground -m-1 inline-flex cursor-pointer items-center gap-1 rounded p-1 font-medium"
+                                :class="{
+                                    'text-foreground': sortKey === column.key,
+                                }"
+                                @click="toggleSort(column.key)"
+                            >
+                                {{ column.label }}
+                                <ArrowUp
+                                    v-if="
+                                        sortKey === column.key &&
+                                        sortDirection === 'asc'
+                                    "
+                                    class="size-3.5"
+                                />
+                                <ArrowDown
+                                    v-else-if="sortKey === column.key"
+                                    class="size-3.5"
+                                />
+                                <ArrowUpDown
+                                    v-else
+                                    class="size-3.5 opacity-40"
+                                />
+                            </button>
+                        </th>
                         <th class="p-3 font-medium"></th>
                     </tr>
                 </thead>
                 <tbody
                     class="divide-sidebar-border/70 dark:divide-sidebar-border divide-y"
                 >
-                    <tr v-for="card in cards" :key="card.card_uid">
+                    <tr v-if="visibleCards.length === 0">
+                        <td
+                            colspan="7"
+                            class="text-muted-foreground p-8 text-center"
+                        >
+                            No cards match your search or filters.
+                        </td>
+                    </tr>
+                    <tr v-for="card in visibleCards" :key="card.card_uid">
                         <td class="p-3 font-mono">{{ card.card_uid }}</td>
                         <td class="p-3">{{ card.employee_name ?? '—' }}</td>
                         <td class="p-3">{{ card.organization_name ?? '—' }}</td>

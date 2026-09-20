@@ -49,7 +49,7 @@ class CardController extends Controller
                     'employee_name' => $card->employee?->name,
                     'organization_name' => $card->employee?->organization?->name,
                 ]),
-            'users' => $this->scopedEmployees($request)->orderBy('full_name')->get(['id', 'full_name']),
+            'users' => $this->scopedEmployees($request)->orderBy('full_name')->get(['id', 'full_name', 'email']),
             'unmatchedScans' => $this->recentUnmatchedScans($request),
         ]);
     }

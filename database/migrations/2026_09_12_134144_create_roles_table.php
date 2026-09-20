@@ -24,7 +24,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing') || Schema::hasTable('roles')) {
+        if (Schema::hasTable('roles')) {
             return;
         }
 

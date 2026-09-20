@@ -19,10 +19,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         if (! Schema::hasTable('license_issuances')) {
             Schema::create('license_issuances', function (Blueprint $table) {
                 $table->uuid('id')->primary()->default(new Expression('gen_random_uuid()'));
@@ -58,10 +54,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         Schema::dropIfExists('license_issuances');
     }
 };

@@ -39,15 +39,6 @@ class Order extends Model
     public $timestamps = false;
 
     /**
-     * Tests use the local sqlite connection instead, so they stay fast,
-     * isolated, and never touch production data.
-     */
-    public function getConnectionName(): string
-    {
-        return app()->environment('testing') ? 'sqlite' : 'supabase';
-    }
-
-    /**
      * @return array<string, string>
      */
     protected function casts(): array

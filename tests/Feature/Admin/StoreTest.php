@@ -7,7 +7,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\User;
 use App\StripeCheckoutSession;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Config;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery;
@@ -16,7 +16,7 @@ use Tests\TestCase;
 
 class StoreTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_owner_can_view_the_store(): void
     {

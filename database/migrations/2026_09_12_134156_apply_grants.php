@@ -27,10 +27,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         DB::statement(<<<'SQL'
             revoke all on public.organizations, public.teams, public.users, public.cards, public.punches,
                 public.roles

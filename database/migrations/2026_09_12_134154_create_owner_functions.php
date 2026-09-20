@@ -20,10 +20,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         DB::unprepared(<<<'SQL'
             create or replace function public.owner_organizations(p_token uuid)
             returns table (id uuid, name text, description text, active boolean, kiosk_key uuid,

@@ -18,10 +18,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         DB::unprepared(<<<'SQL'
             create or replace function public.admin_daily_hours(p_token uuid, p_from date, p_to date)
             returns table (user_id uuid, full_name text, team_name text, work_date date,

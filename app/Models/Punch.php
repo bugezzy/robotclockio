@@ -30,15 +30,6 @@ class Punch extends Model
 
     protected $connection = 'supabase';
 
-    /**
-     * Tests use the local sqlite connection instead, so they stay fast,
-     * isolated, and never touch production data.
-     */
-    public function getConnectionName(): string
-    {
-        return app()->environment('testing') ? 'sqlite' : 'supabase';
-    }
-
     public $timestamps = false;
 
     /**

@@ -21,10 +21,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         DB::unprepared(<<<'SQL'
             create or replace function public.check_for_update(p_platform text, p_current_version text)
             returns table (update_available boolean, latest_version text, download_url text)

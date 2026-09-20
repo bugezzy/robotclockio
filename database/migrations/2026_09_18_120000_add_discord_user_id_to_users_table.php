@@ -17,7 +17,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing') || Schema::hasColumn('users', 'discord_user_id')) {
+        if (Schema::hasColumn('users', 'discord_user_id')) {
             return;
         }
 
@@ -31,10 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('discord_user_id');
         });

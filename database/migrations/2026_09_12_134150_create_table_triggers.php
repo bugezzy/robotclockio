@@ -19,10 +19,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         DB::statement('drop trigger if exists teams_touch_updated_at on teams');
         DB::statement(<<<'SQL'
             create trigger teams_touch_updated_at

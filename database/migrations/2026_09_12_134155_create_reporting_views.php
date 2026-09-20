@@ -20,10 +20,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         // Pairs each `in` punch with its next `out` via a window function.
         // An `in` with no following `out` (or two `in`s in a row) surfaces
         // as an open session (`ended_at` null) rather than being dropped.

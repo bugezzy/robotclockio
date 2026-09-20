@@ -101,8 +101,8 @@ return [
 
         // The Supabase-hosted RobotClock database (organizations, teams,
         // users, cards, punches). This app owns and migrates this schema;
-        // the 'default' sqlite connection remains separate for this app's
-        // own Fortify auth, sessions, cache, and jobs.
+        // it is also the default connection (DB_CONNECTION=supabase), so
+        // Fortify auth, sessions, cache, and jobs live here too.
         'supabase' => [
             'driver' => 'pgsql',
             'url' => env('SUPABASE_DB_URL'),

@@ -5,7 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 class ProductManagementTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_system_can_view_the_catalog(): void
     {

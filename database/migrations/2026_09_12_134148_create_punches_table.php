@@ -18,7 +18,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing') || Schema::hasTable('punches')) {
+        if (Schema::hasTable('punches')) {
             return;
         }
 
@@ -54,10 +54,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         Schema::dropIfExists('punches');
     }
 };

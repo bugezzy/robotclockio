@@ -20,10 +20,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         DB::unprepared(<<<'SQL'
             create or replace function public.login(p_email text, p_password text)
             returns table (token uuid, id uuid, full_name text, email text, role text,

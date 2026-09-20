@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -32,7 +33,7 @@ class UserFactory extends Factory
             'team_id' => null,
             'role' => 'member',
             'active' => true,
-            'organization_id' => null,
+            'organization_id' => Organization::factory(),
             'remember_token' => Str::random(10),
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,

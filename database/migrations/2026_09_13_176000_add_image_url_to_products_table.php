@@ -17,7 +17,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing') || Schema::hasColumn('products', 'image_url')) {
+        if (Schema::hasColumn('products', 'image_url')) {
             return;
         }
 
@@ -31,10 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         Schema::table('products', function (Blueprint $table) {
             $table->dropColumn('image_url');
         });

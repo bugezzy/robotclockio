@@ -28,10 +28,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         DB::unprepared(<<<'SQL'
             create or replace function public.admin_users(p_token uuid)
             returns table (id uuid, full_name text, email text, role text, active boolean,

@@ -22,10 +22,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (app()->environment('testing')) {
-            return;
-        }
-
         DB::statement('create schema if not exists private');
         DB::statement('revoke all on schema private from public');
 

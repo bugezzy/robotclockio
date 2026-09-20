@@ -53,15 +53,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasUuids, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
-    /**
-     * Admin panel staff read/write the live RobotClock database directly.
-     * Tests use the local sqlite connection instead, so they stay fast,
-     * isolated, and never touch production data.
-     */
-    public function getConnectionName(): string
-    {
-        return app()->environment('testing') ? 'sqlite' : 'supabase';
-    }
+    protected $connection = 'supabase';
 
     /**
      * @var list<string>

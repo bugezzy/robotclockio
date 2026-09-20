@@ -4,13 +4,13 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Organization;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class UserManagementTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_owner_does_not_see_the_system_role_option(): void
     {
@@ -60,6 +60,7 @@ class UserManagementTest extends TestCase
         $this->actingAs($system)
             ->post(route('admin.users.store'), [
                 'name' => 'New Owner',
+                'email' => 'new.owner@example.com',
                 'role' => 'owner',
                 'organization_id' => $organization->id,
                 'active' => true,
@@ -71,7 +72,24 @@ class UserManagementTest extends TestCase
             'role' => 'owner',
             'organization_id' => $organization->id,
             'team_id' => null,
-        ], 'sqlite');
+        ]);
+    }
+
+    public function test_an_email_is_required_for_roles_that_can_sign_in(): void
+    {
+        $system = User::factory()->system()->create();
+        $organization = Organization::factory()->create();
+
+        $this->actingAs($system)
+            ->post(route('admin.users.store'), [
+                'name' => 'No Email Admin',
+                'role' => 'admin',
+                'organization_id' => $organization->id,
+                'active' => true,
+            ])
+            ->assertSessionHasErrors('email');
+
+        $this->assertDatabaseMissing('users', ['full_name' => 'No Email Admin']);
     }
 
     public function test_owner_can_link_a_discord_user_id_to_a_member(): void
